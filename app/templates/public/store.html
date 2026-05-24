@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ seller.store_name }} — CreatorGate{% endblock %}
+{% block body %}
+<nav class="public-nav">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a href="/api/" class="brand-public d-flex align-items-center gap-2">
+      <span style="width:14px;height:14px;border-radius:50%;background:var(--cg-primary)"></span> CreatorGate
+    </a>
+    <a href="/api/" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <div class="cg-card" data-testid="store-header">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <div class="seller-avatar" style="width:72px;height:72px;font-size:28px">{{ seller.store_name[:2]|upper }}</div>
+      <div class="flex-grow-1">
+        <span class="small-label">Loja oficial</span>
+        <h1 class="h-outfit mb-1" style="font-size:32px">{{ seller.store_name }}</h1>
+        <p class="text-muted mb-0">{{ seller.bio or 'Conteúdos exclusivos.' }}</p>
+      </div>
+      <div class="text-end">
+        <div class="small text-muted">{{ products|length }} produto(s) ativo(s)</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="h-outfit mt-5 mb-3">Catálogo</h3>
+  {% if products %}
+  <div class="row g-3">
+    {% for p in products %}
+    <div class="col-12 col-sm-6 col-lg-4">
+      <a href="/api/p/{{ p.id }}" class="text-decoration-none text-reset">
+        <div class="product-card" data-testid="product-{{ p.id }}">
+          {% if p.is_adult %}<span class="adult-tag mb-2">🔞 +18</span>{% endif %}
+          <div class="cat-pill">{{ p.category.name if p.category else 'Geral' }}</div>
+          <div class="name">{{ p.name }}</div>
+          <div class="desc">{{ (p.description or '')[:120] }}</div>
+          <div class="d-flex justify-content-between align-items-end mt-3">
+            <div class="price">R$ {{ "%.2f"|format(p.price) }}</div>
+            <span class="btn btn-sm btn-outline-primary">Ver detalhes</span>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}<div class="empty cg-card"><p>Sem produtos ativos.</p></div>{% endif %}
+</div>
+{% endblock %}

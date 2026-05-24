@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Abrir ticket — CreatorGate{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini"><a href="/api/seller/tickets">Tickets</a> ›</div>
+      <h1>Abrir novo ticket</h1>
+    </div>
+    <a href="/api/seller/tickets" class="btn btn-light"><i class="bi bi-arrow-left"></i> Voltar</a>
+  </div>
+
+  {% if error %}<div class="alert alert-danger" data-testid="ticket-error">{{ error }}</div>{% endif %}
+
+  <div class="cg-card" style="max-width:720px">
+    <form method="post" action="/api/seller/tickets/new" data-testid="ticket-form">
+      <div class="mb-3">
+        <label class="small-label">Assunto *</label>
+        <input type="text" name="subject" required minlength="3" maxlength="200"
+               class="form-control" placeholder="Descreva em poucas palavras"
+               data-testid="ticket-subject">
+      </div>
+
+      <div class="row g-3">
+        <div class="col-sm-7 mb-3">
+          <label class="small-label">Categoria</label>
+          <select name="category" class="form-select" data-testid="ticket-category">
+            {% for k, lbl in CATEGORIES.items() %}
+            <option value="{{ k }}">{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-5 mb-3">
+          <label class="small-label">Prioridade</label>
+          <select name="priority" class="form-select" data-testid="ticket-priority">
+            {% for k, lbl in PRIORITIES.items() %}
+            <option value="{{ k }}" {% if k=='normal' %}selected{% endif %}>{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="small-label">Mensagem *</label>
+        <textarea name="message" rows="6" required minlength="5" maxlength="5000"
+                  class="form-control" placeholder="Descreva seu problema ou dúvida em detalhes..."
+                  data-testid="ticket-message"></textarea>
+      </div>
+
+      <button class="btn btn-primary" type="submit" data-testid="submit-ticket">
+        <i class="bi bi-send"></i> Enviar ticket
+      </button>
+    </form>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Saques — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-withdrawals">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Saques</h1><p class="breadcrumb-mini">{{ items|length }} solicitação(ões)</p></div></div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3"><select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['pending','approved','paid','rejected'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="col-md-3"><button class="btn btn-primary"><i class="bi bi-funnel"></i></button>
+        <a href="/api/admin/withdrawals" class="btn btn-light">Limpar</a></div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr><th>#</th><th>Vendedor</th><th>Valor</th><th>Pix</th><th>Status</th><th>Solicitado</th><th>Pago em</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for w in items %}
+          <tr data-testid="wd-row-{{ w.id }}">
+            <td>#{{ w.id }}</td>
+            <td>{{ w.seller.store_name if w.seller else '—' }}</td>
+            <td><strong>R$ {{ "%.2f"|format(w.amount) }}</strong></td>
+            <td><code class="small">{{ w.pix_key }}</code></td>
+            <td><span class="badge-pill b-{{ w.status }}">{{ w.status }}</span></td>
+            <td class="small text-muted">{{ w.requested_at.strftime('%d/%m %H:%M') }}</td>
+            <td class="small text-muted">{{ w.paid_at.strftime('%d/%m %H:%M') if w.paid_at else '—' }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if w.status == 'pending' %}
+                <form method="post" action="/api/admin/withdrawals/{{ w.id }}/approve"><button class="btn btn-sm btn-primary" data-testid="approve-{{ w.id }}"><i class="bi bi-check"></i></button></form>
+                {% endif %}
+                {% if w.status in ['pending','approved'] %}
+                <form method="post" action="/api/admin/withdrawals/{{ w.id }}/mark-paid"><button class="btn btn-sm btn-outline-primary" data-testid="mark-paid-{{ w.id }}"><i class="bi bi-cash-coin"></i> Pago</button></form>
+                <form method="post" action="/api/admin/withdrawals/{{ w.id }}/reject" data-confirm="Rejeitar saque? O valor volta ao saldo."><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i></button></form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8"><div class="empty"><i class="bi bi-cash-coin"></i><p class="mt-2">Sem saques</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

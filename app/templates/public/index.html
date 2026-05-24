@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}CreatorGate — Marketplace de Conteúdos Digitais{% endblock %}
+{% block body %}
+<nav class="public-nav">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a href="/api/" class="brand-public d-flex align-items-center gap-2" data-testid="brand">
+      <span style="width:14px;height:14px;border-radius:50%;background:var(--cg-primary)"></span> CreatorGate
+    </a>
+    <div class="d-flex align-items-center gap-2">
+      <a href="/api/register" class="btn btn-light btn-sm" data-testid="register-link"><i class="bi bi-person-plus"></i> Criar conta</a>
+      <a href="/api/login" class="btn btn-primary btn-sm" data-testid="seller-login"><i class="bi bi-shop"></i> Entrar</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-7">
+        <span class="pill-tag mb-3"><i class="bi bi-stars"></i> Marketplace de criadores</span>
+        <h1 class="h-outfit mt-3">Conteúdos digitais direto dos <span style="color:var(--cg-primary)">criadores</span>.</h1>
+        <p class="mt-3">Compre, venda e descubra ebooks, packs, áudios, vídeos, cursos e muito mais — entregue automaticamente pelo Telegram.</p>
+        <div class="d-flex gap-2 flex-wrap mt-4">
+          <a href="#produtos" class="btn btn-primary px-4 py-2" data-testid="cta-explore"><i class="bi bi-grid"></i> Explorar produtos</a>
+          <a href="/api/register" class="btn btn-light px-4 py-2" data-testid="cta-sell"><i class="bi bi-shop"></i> Quero vender</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="cg-card" style="background:linear-gradient(135deg,#FFFBF6,#fff)">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="seller-avatar">CG</div>
+            <div>
+              <div class="h-outfit" style="font-size:18px;font-weight:600">Em destaque</div>
+              <div class="small text-muted">{{ products|length }} produtos disponíveis</div>
+            </div>
+          </div>
+          <ul class="list-unstyled small mb-0" style="color:var(--cg-text)">
+            <li class="mb-2"><i class="bi bi-check-circle" style="color:#047857"></i> Entrega automática via Telegram</li>
+            <li class="mb-2"><i class="bi bi-check-circle" style="color:#047857"></i> Pagamento Pix simples</li>
+            <li><i class="bi bi-check-circle" style="color:#047857"></i> Moderação e segurança</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" id="produtos">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="small-label">Novidades</span>
+        <h2 class="h-outfit mb-0">Produtos recentes</h2>
+      </div>
+    </div>
+    {% if products %}
+    <div class="row g-3">
+      {% for p in products %}
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <a href="/api/p/{{ p.id }}" class="text-decoration-none text-reset">
+          <div class="product-card" data-testid="product-{{ p.id }}">
+            {% if p.is_adult %}<span class="adult-tag mb-2">🔞 +18</span>{% endif %}
+            <div class="cat-pill">{{ p.category.name if p.category else 'Geral' }}</div>
+            <div class="name">{{ p.name }}</div>
+            <div class="desc">{{ (p.description or '')[:90] }}{% if (p.description or '')|length > 90 %}…{% endif %}</div>
+            <div class="d-flex justify-content-between align-items-end mt-3">
+              <div>
+                <div class="small text-muted">{{ p.seller.store_name if p.seller else '' }}</div>
+                <div class="price">R$ {{ "%.2f"|format(p.price) }}</div>
+              </div>
+              <span class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-right"></i></span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<div class="empty cg-card"><i class="bi bi-box"></i><p class="mt-2">Nenhum produto ativo ainda</p></div>{% endif %}
+  </div>
+</section>
+
+{% if sellers %}
+<section class="py-5" style="background:#fff">
+  <div class="container">
+    <span class="small-label">Lojas</span>
+    <h2 class="h-outfit mb-4">Criadores ativos</h2>
+    <div class="row g-3">
+      {% for s in sellers %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <a href="/api/s/{{ s.slug }}" class="text-decoration-none text-reset">
+          <div class="seller-card" data-testid="seller-{{ s.id }}">
+            <div class="d-flex align-items-center gap-3">
+              <div class="seller-avatar">{{ s.store_name[:2]|upper }}</div>
+              <div class="flex-grow-1">
+                <div class="h-outfit" style="font-size:17px;font-weight:600">{{ s.store_name }}</div>
+                <div class="small text-muted">{{ (s.bio or '')[:60] }}</div>
+              </div>
+              <i class="bi bi-arrow-right" style="color:var(--cg-primary)"></i>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<footer class="py-5" style="background:#FAFAF9;border-top:1px solid var(--cg-border)">
+  <div class="container text-center small text-muted">
+    <div class="brand-public mb-2">CreatorGate</div>
+    <div>Marketplace de conteúdos digitais — MVP</div>
+    <div class="mt-2">
+      <a href="/api/login" class="text-decoration-none">Entrar no painel</a>
+    </div>
+  </div>
+</footer>
+{% endblock %}

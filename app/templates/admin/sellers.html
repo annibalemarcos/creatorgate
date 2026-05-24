@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Vendedores — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-sellers">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header">
+    <div>
+      <h1 class="h-outfit">Vendedores</h1>
+      <p class="breadcrumb-mini">{{ sellers|length }} vendedor(es)</p>
+    </div>
+  </div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="small-label mb-1">Buscar por nome</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Ex: Loja do João" data-testid="search-input">
+      </div>
+      <div class="col-md-3">
+        <label class="small-label mb-1">Status</label>
+        <select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['pending','active','suspended','banned'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary" data-testid="apply-filter"><i class="bi bi-funnel"></i> Filtrar</button>
+        <a href="/api/admin/sellers" class="btn btn-light">Limpar</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr>
+          <th>Loja</th><th>Slug</th><th>Plano</th><th>Comissão</th><th>+18</th>
+          <th>Status</th><th>Criada</th><th>Ações</th>
+        </tr></thead>
+        <tbody>
+        {% for s in sellers %}
+          <tr data-testid="seller-row-{{ s.id }}">
+            <td>
+              <div style="font-weight:600">{{ s.store_name }}</div>
+              <div class="small text-muted">@{{ s.user.username or '—' }}</div>
+            </td>
+            <td><code class="small">{{ s.slug }}</code></td>
+            <td>{{ s.plan.name if s.plan else '—' }}</td>
+            <td>{{ "%.1f"|format(s.commission_rate) }}%</td>
+            <td>{{ 'Sim' if s.is_adult_enabled else 'Não' }}</td>
+            <td><span class="badge-pill b-{{ s.status }}">{{ s.status }}</span></td>
+            <td class="text-muted small">{{ s.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if s.status == 'pending' %}
+                <form method="post" action="/api/admin/sellers/{{ s.id }}/approve"><button class="btn btn-sm btn-primary" data-testid="approve-{{ s.id }}"><i class="bi bi-check-lg"></i> Aprovar</button></form>
+                {% endif %}
+                {% if s.status == 'active' %}
+                <form method="post" action="/api/admin/sellers/{{ s.id }}/suspend" data-confirm="Suspender vendedor?"><button class="btn btn-sm btn-outline-secondary" data-testid="suspend-{{ s.id }}"><i class="bi bi-pause"></i></button></form>
+                {% endif %}
+                {% if s.status in ['suspended','banned'] %}
+                <form method="post" action="/api/admin/sellers/{{ s.id }}/reactivate"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-play"></i></button></form>
+                {% endif %}
+                {% if s.status != 'banned' %}
+                <form method="post" action="/api/admin/sellers/{{ s.id }}/ban" data-confirm="Banir definitivamente?"><button class="btn btn-sm btn-outline-danger" data-testid="ban-{{ s.id }}"><i class="bi bi-slash-circle"></i></button></form>
+                {% endif %}
+                <a href="/api/admin/products?q={{ s.store_name }}" class="btn btn-sm btn-light"><i class="bi bi-box-seam"></i></a>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8"><div class="empty"><i class="bi bi-shop"></i><p class="mt-2">Nenhum vendedor</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-dashboard">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header">
+    <div>
+      <h1 class="h-outfit">Dashboard</h1>
+      <p class="breadcrumb-mini">Visão geral da plataforma</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/api/admin/sellers?status=pending" class="btn btn-light btn-sm" data-testid="quick-pending-sellers">{{ stats.pending_sellers }} vendedores pendentes</a>
+      <a href="/api/admin/products?status=pending" class="btn btn-light btn-sm">{{ stats.pending_products }} produtos pendentes</a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {% set cards = [
+      ('Receita total', 'R$ %.2f'|format(stats.total_revenue), 'bi-graph-up-arrow', '#FFF7ED', 'var(--cg-primary)'),
+      ('Receita do mês', 'R$ %.2f'|format(stats.month_revenue), 'bi-calendar-month', '#EFF6FF', '#1D4ED8'),
+      ('Comissão da plataforma', 'R$ %.2f'|format(stats.platform_fee_total), 'bi-percent', '#ECFDF5', '#047857'),
+      ('Vendedores', stats.total_sellers, 'bi-shop', '#FFF7ED', 'var(--cg-primary)'),
+      ('Vendedores pendentes', stats.pending_sellers, 'bi-hourglass-split', '#FFFBEB', '#B45309'),
+      ('Produtos ativos', stats.active_products, 'bi-box-seam', '#ECFDF5', '#047857'),
+      ('Produtos pendentes', stats.pending_products, 'bi-hourglass-split', '#FFFBEB', '#B45309'),
+      ('Pedidos pagos', stats.paid_orders, 'bi-receipt', '#EFF6FF', '#1D4ED8'),
+      ('Saques pendentes', stats.pending_withdrawals, 'bi-cash-coin', '#FFFBEB', '#B45309'),
+      ('Denúncias abertas', stats.open_reports, 'bi-flag', '#FEF2F2', '#B91C1C'),
+      ('Usuários banidos', stats.banned_users, 'bi-person-x', '#FEF2F2', '#B91C1C'),
+    ] %}
+    {% for label, value, icon, bg, color in cards %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="cg-card stat-card cg-card-hover" data-testid="stat-{{ loop.index }}">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <div class="stat-label">{{ label }}</div>
+            <div class="stat-value mt-1">{{ value }}</div>
+          </div>
+          <div class="stat-icon" style="background:{{bg}};color:{{color}}"><i class="bi {{ icon }}"></i></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-lg-7">
+      <div class="cg-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h-outfit mb-0">Pedidos recentes</h4>
+          <a href="/api/admin/orders" class="small text-decoration-none">Ver todos →</a>
+        </div>
+        {% if recent_orders %}
+        <table class="cg-table">
+          <thead><tr><th>#</th><th>Produto</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
+          <tbody>
+          {% for o in recent_orders %}
+            <tr>
+              <td>#{{ o.id }}</td>
+              <td>{{ o.product.name if o.product else '—' }}</td>
+              <td>R$ {{ "%.2f"|format(o.amount) }}</td>
+              <td><span class="badge-pill b-{{ o.status }}">{{ o.status }}</span></td>
+              <td class="text-muted">{{ o.created_at.strftime('%d/%m %H:%M') }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty"><i class="bi bi-receipt"></i><p class="mt-2">Sem pedidos ainda</p></div>{% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="cg-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h-outfit mb-0">Vendedores recentes</h4>
+          <a href="/api/admin/sellers" class="small text-decoration-none">Ver todos →</a>
+        </div>
+        {% if recent_sellers %}
+        <div class="d-flex flex-column gap-2">
+        {% for s in recent_sellers %}
+          <div class="d-flex justify-content-between align-items-center p-2" style="border:1px solid var(--cg-border);border-radius:10px">
+            <div>
+              <div style="font-weight:600">{{ s.store_name }}</div>
+              <div class="small text-muted">{{ s.slug }}</div>
+            </div>
+            <span class="badge-pill b-{{ s.status }}">{{ s.status }}</span>
+          </div>
+        {% endfor %}
+        </div>
+        {% else %}<div class="empty"><p>Nenhum vendedor</p></div>{% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.ticket_number }} — {{ ticket.subject }}{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini"><a href="/api/seller/tickets">Meus tickets</a> ›</div>
+      <h1>{{ ticket.subject }}</h1>
+      <div class="text-muted small mt-1">
+        <code>{{ ticket.ticket_number }}</code> ·
+        {{ CATEGORIES.get(ticket.category, ticket.category) }} ·
+        criado em {{ ticket.created_at.strftime('%d/%m/%Y %H:%M') }}
+      </div>
+    </div>
+    <span class="badge-pill
+      {% if ticket.status=='open' %}b-open
+      {% elif ticket.status=='answered' %}b-delivered
+      {% elif ticket.status=='pending' %}b-pending
+      {% else %}b-canceled{% endif %}" style="font-size:14px;padding:8px 16px">
+      {{ STATUS_LABELS.get(ticket.status, ticket.status) }}
+    </span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-9">
+      <div class="cg-card" data-testid="seller-ticket-thread">
+        {% for m in ticket.messages %}
+          {% if not m.is_internal_note %}
+          <div class="ticket-msg ticket-msg-{{ m.sender_type }}">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong>
+                {% if m.sender_type=='staff' %}
+                  <i class="bi bi-shield-check text-primary"></i> Suporte
+                {% elif m.sender_type=='seller' %}
+                  🏪 Você ({{ m.sender_name }})
+                {% else %}
+                  {{ m.sender_name }}
+                {% endif %}
+              </strong>
+              <span class="text-muted small">{{ m.created_at.strftime('%d/%m %H:%M') }}</span>
+            </div>
+            <div style="white-space:pre-wrap">{{ m.content }}</div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if ticket.status != 'closed' %}
+      <div class="cg-card mt-3">
+        <h6 class="mb-3">Responder</h6>
+        <form method="post" action="/api/seller/tickets/{{ ticket.id }}/reply"
+              data-testid="seller-reply-form">
+          <textarea name="content" rows="4" required class="form-control mb-2"
+                    placeholder="Sua mensagem..." data-testid="seller-reply-content"></textarea>
+          <div class="d-flex justify-content-between">
+            <form method="post" action="/api/seller/tickets/{{ ticket.id }}/close" class="d-inline"
+                  onsubmit="return confirm('Fechar este ticket?');">
+              <button class="btn btn-light" type="submit"
+                      data-testid="seller-close-btn">
+                <i class="bi bi-lock"></i> Fechar ticket
+              </button>
+            </form>
+            <button class="btn btn-primary" type="submit" data-testid="seller-reply-submit">
+              <i class="bi bi-send"></i> Enviar
+            </button>
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div class="cg-card mt-3 text-center text-muted">
+        <i class="bi bi-lock"></i> Ticket fechado.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</main>
+
+<style>
+.ticket-msg { padding: 14px 16px; border-radius: 12px; margin-bottom: 12px;
+  background: #FAFAF9; border-left: 3px solid var(--cg-border); }
+.ticket-msg-staff { background: #FFF7ED; border-left-color: var(--cg-primary); }
+.ticket-msg-seller { background: #ECFDF5; border-left-color: #047857; }
+.ticket-msg-user { background: #EFF6FF; border-left-color: #1D4ED8; }
+</style>
+{% endblock %}

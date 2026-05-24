@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Tickets — CreatorGate{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini">Suporte</div>
+      <h1>Tickets de suporte</h1>
+    </div>
+  </div>
+
+  <form method="get" class="cg-card mb-3 d-flex gap-2 flex-wrap" data-testid="tickets-filter">
+    <input type="text" name="q" value="{{ q }}" class="form-control" style="max-width:260px"
+           placeholder="Buscar por assunto ou número (T-...)" data-testid="filter-q">
+    <select name="status" class="form-select" style="max-width:180px" data-testid="filter-status">
+      <option value="">Todos status</option>
+      {% for k, lbl in STATUS_LABELS.items() %}
+      <option value="{{ k }}" {% if status==k %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <select name="category" class="form-select" style="max-width:200px" data-testid="filter-category">
+      <option value="">Todas categorias</option>
+      {% for k, lbl in CATEGORIES.items() %}
+      <option value="{{ k }}" {% if category==k %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <select name="priority" class="form-select" style="max-width:160px" data-testid="filter-priority">
+      <option value="">Todas prioridades</option>
+      {% for k, lbl in PRIORITIES.items() %}
+      <option value="{{ k }}" {% if priority==k %}selected{% endif %}>{{ lbl }}</option>
+      {% endfor %}
+    </select>
+    <div class="form-check d-flex align-items-center" style="padding-left:32px">
+      <input class="form-check-input" type="checkbox" name="mine" value="1" id="mineChk"
+             {% if mine %}checked{% endif %} data-testid="filter-mine">
+      <label for="mineChk" class="form-check-label small ms-2">Atribuídos a mim</label>
+    </div>
+    <button class="btn btn-light" type="submit"><i class="bi bi-funnel"></i></button>
+  </form>
+
+  <div class="cg-card p-0">
+    <table class="cg-table" data-testid="tickets-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Assunto</th>
+          <th>Aberto por</th>
+          <th>Categoria</th>
+          <th>Prioridade</th>
+          <th>Status</th>
+          <th>Atribuído a</th>
+          <th>Última atividade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in items %}
+        <tr onclick="window.location='/api/admin/tickets/{{ t.id }}'" style="cursor:pointer"
+            data-testid="ticket-row-{{ t.id }}">
+          <td><code>{{ t.ticket_number }}</code></td>
+          <td><strong>{{ t.subject }}</strong></td>
+          <td class="small">
+            {% if t.opener_seller_id and t.opener_seller %}
+              🏪 {{ t.opener_seller.store_name }}
+            {% elif t.opener_user_id and t.opener_user %}
+              👤 {{ t.opener_user.first_name or t.opener_user.username or 'User' }}
+            {% else %}—{% endif %}
+          </td>
+          <td class="small">{{ CATEGORIES.get(t.category, t.category) }}</td>
+          <td>
+            <span class="badge-pill
+              {% if t.priority=='urgent' %}b-banned
+              {% elif t.priority=='high' %}b-pending
+              {% elif t.priority=='low' %}b-canceled
+              {% else %}b-delivered{% endif %}">
+              {{ PRIORITIES.get(t.priority, t.priority) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge-pill
+              {% if t.status=='open' %}b-open
+              {% elif t.status=='answered' %}b-delivered
+              {% elif t.status=='pending' %}b-pending
+              {% else %}b-canceled{% endif %}">
+              {{ STATUS_LABELS.get(t.status, t.status) }}
+            </span>
+          </td>
+          <td class="small">
+            {% if t.assigned_staff %}@{{ t.assigned_staff.username }}{% else %}<span class="text-muted">não atribuído</span>{% endif %}
+          </td>
+          <td class="small text-muted">
+            {{ t.last_reply_at.strftime('%d/%m %H:%M') }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty">
+          <i class="bi bi-life-preserver"></i><br>Nenhum ticket encontrado.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

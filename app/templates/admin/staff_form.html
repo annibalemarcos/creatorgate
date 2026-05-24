@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if staff else 'Novo' }} Staff — CreatorGate{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini"><a href="/api/admin/staff">Equipe</a> ›</div>
+      <h1>{{ 'Editar membro' if staff else 'Novo membro da equipe' }}</h1>
+    </div>
+    <a href="/api/admin/staff" class="btn btn-light"><i class="bi bi-arrow-left"></i> Voltar</a>
+  </div>
+
+  {% if error %}<div class="alert alert-danger" data-testid="staff-error">{{ error }}</div>{% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="cg-card">
+        <h5 class="mb-3">{{ 'Atualizar dados' if staff else 'Criar conta de staff' }}</h5>
+        <form method="post"
+              action="{% if staff %}/api/admin/staff/{{ staff.id }}/edit{% else %}/api/admin/staff/new{% endif %}"
+              data-testid="staff-form">
+          {% if not staff %}
+          <div class="mb-3">
+            <label class="small-label">Usuário (login) *</label>
+            <input type="text" name="username" required minlength="3" maxlength="80"
+                   class="form-control" placeholder="ex: maria-suporte"
+                   data-testid="staff-username">
+          </div>
+          {% else %}
+          <div class="mb-3">
+            <label class="small-label">Usuário</label>
+            <input type="text" value="@{{ staff.username }}" disabled class="form-control">
+          </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="small-label">Nome completo</label>
+            <input type="text" name="full_name" maxlength="160"
+                   value="{{ staff.full_name if staff else '' }}" class="form-control"
+                   data-testid="staff-fullname">
+          </div>
+
+          <div class="mb-3">
+            <label class="small-label">Role *</label>
+            <select name="role" required class="form-select" data-testid="staff-role">
+              <option value="super_admin" {% if staff and staff.role=='super_admin' %}selected{% endif %}>Super Admin — tudo</option>
+              <option value="moderator" {% if staff and staff.role=='moderator' %}selected{% endif %}>Moderador — produtos, denúncias, tickets</option>
+              <option value="financial" {% if staff and staff.role=='financial' %}selected{% endif %}>Financeiro — saques, pedidos, carteiras</option>
+              <option value="support" {% if not staff or staff.role=='support' %}selected{% endif %}>Suporte — só tickets e leitura</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="small-label">Telegram ID (para notificações por push)</label>
+            <input type="text" name="telegram_id" class="form-control"
+                   value="{{ staff.telegram_id if staff else '' }}"
+                   placeholder="ex: 123456789" data-testid="staff-telegram">
+            <div class="form-text small">Opcional. O staff recebe push do bot ao tocar /start.</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6 mb-3">
+              <label class="small-label">{{ 'Nova senha' if staff else 'Senha' }} {% if not staff %}*{% endif %}</label>
+              <input type="password" name="password"
+                     {% if not staff %}required minlength="8"{% endif %}
+                     class="form-control" data-testid="staff-password"
+                     placeholder="{{ 'Deixe vazio para manter' if staff else 'Mín. 8 chars' }}">
+            </div>
+            <div class="col-sm-6 mb-3">
+              <label class="small-label">Confirmar senha</label>
+              <input type="password" name="password_confirm"
+                     {% if not staff %}required minlength="8"{% endif %}
+                     class="form-control" data-testid="staff-password-confirm">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" type="submit" data-testid="save-staff-btn">
+            <i class="bi bi-check2"></i> {{ 'Salvar alterações' if staff else 'Criar staff' }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if not staff and sellers %}
+    <div class="col-lg-5">
+      <div class="cg-card">
+        <h5 class="mb-3"><i class="bi bi-arrow-up-circle"></i> Promover vendedor</h5>
+        <p class="small text-muted">Use isto para transformar um vendedor ativo em membro da equipe.</p>
+        <form method="post" action="/api/admin/staff/promote" data-testid="promote-form">
+          <div class="mb-3">
+            <label class="small-label">Vendedor</label>
+            <select name="seller_id" required class="form-select" data-testid="promote-seller">
+              <option value="">Selecione...</option>
+              {% for sl in sellers %}
+              <option value="{{ sl.id }}">{{ sl.store_name }} (@{{ sl.slug }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="small-label">Role *</label>
+            <select name="role" required class="form-select" data-testid="promote-role">
+              <option value="moderator">Moderador</option>
+              <option value="financial">Financeiro</option>
+              <option value="support" selected>Suporte</option>
+            </select>
+          </div>
+          <div class="row g-2">
+            <div class="col-6 mb-3">
+              <label class="small-label">Senha *</label>
+              <input type="password" name="password" required minlength="8" class="form-control"
+                     data-testid="promote-password">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="small-label">Confirmar *</label>
+              <input type="password" name="password_confirm" required minlength="8"
+                     class="form-control" data-testid="promote-password-confirm">
+            </div>
+          </div>
+          <button class="btn btn-outline-primary w-100" type="submit" data-testid="promote-btn">
+            <i class="bi bi-arrow-up-circle"></i> Promover a staff
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Meus tickets — CreatorGate{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini">Suporte</div>
+      <h1>Meus tickets</h1>
+    </div>
+    <a href="/api/seller/tickets/new" class="btn btn-primary" data-testid="new-ticket-btn">
+      <i class="bi bi-plus-circle"></i> Abrir ticket
+    </a>
+  </div>
+
+  <div class="cg-card p-0">
+    <table class="cg-table" data-testid="seller-tickets-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Assunto</th>
+          <th>Categoria</th>
+          <th>Status</th>
+          <th>Última atividade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in items %}
+        <tr onclick="window.location='/api/seller/tickets/{{ t.id }}'" style="cursor:pointer"
+            data-testid="ticket-row-{{ t.id }}">
+          <td><code>{{ t.ticket_number }}</code></td>
+          <td><strong>{{ t.subject }}</strong></td>
+          <td class="small">{{ CATEGORIES.get(t.category, t.category) }}</td>
+          <td>
+            <span class="badge-pill
+              {% if t.status=='open' %}b-open
+              {% elif t.status=='answered' %}b-delivered
+              {% elif t.status=='pending' %}b-pending
+              {% else %}b-canceled{% endif %}">
+              {{ STATUS_LABELS.get(t.status, t.status) }}
+            </span>
+          </td>
+          <td class="small text-muted">{{ t.last_reply_at.strftime('%d/%m %H:%M') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty">
+          <i class="bi bi-life-preserver"></i><br>
+          Você ainda não abriu nenhum ticket.<br>
+          <a href="/api/seller/tickets/new" class="btn btn-primary mt-3">Abrir primeiro ticket</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ seller.store_name }}{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main" data-testid="seller-dashboard">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header">
+    <div>
+      <h1 class="h-outfit">Olá, {{ seller.store_name }}</h1>
+      <p class="breadcrumb-mini">Status: <span class="badge-pill b-{{ seller.status }}">{{ seller.status }}</span></p>
+    </div>
+    <a href="/api/seller/products/new" class="btn btn-primary" data-testid="new-product"><i class="bi bi-plus-lg"></i> Novo produto</a>
+  </div>
+
+  {% if seller.status == 'pending' %}
+  <div class="alert" style="background:#FFFBEB;border:1px solid #FDE68A;color:#92400E;border-radius:12px">
+    <i class="bi bi-hourglass-split"></i> Seu cadastro está em análise. Aguarde aprovação do admin para começar a vender.
+  </div>
+  {% elif seller.status == 'suspended' %}
+  <div class="alert" style="background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:12px">
+    <i class="bi bi-pause-circle"></i> Sua loja está suspensa. Entre em contato com o suporte.
+  </div>
+  {% endif %}
+
+  <div class="row g-3">
+    {% set cards = [
+      ('Vendas hoje', 'R$ %.2f'|format(stats.sales_today), 'bi-cart-check', '#FFF7ED', 'var(--cg-primary)'),
+      ('Vendas no mês', 'R$ %.2f'|format(stats.sales_month), 'bi-calendar-month', '#EFF6FF', '#1D4ED8'),
+      ('Saldo disponível', 'R$ %.2f'|format(stats.available), 'bi-wallet2', '#ECFDF5', '#047857'),
+      ('Saldo pendente', 'R$ %.2f'|format(stats.pending), 'bi-hourglass', '#FFFBEB', '#B45309'),
+      ('Produtos ativos', stats.active_products, 'bi-box-seam', '#FFF7ED', 'var(--cg-primary)'),
+      ('Pedidos pagos', stats.paid_orders, 'bi-receipt', '#EFF6FF', '#1D4ED8'),
+      ('Saldo bloqueado', 'R$ %.2f'|format(stats.blocked), 'bi-lock', '#FEF2F2', '#B91C1C'),
+      ('Saques pendentes', stats.pending_withdrawals, 'bi-cash-coin', '#FFFBEB', '#B45309'),
+    ] %}
+    {% for label, value, icon, bg, color in cards %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="cg-card stat-card cg-card-hover" data-testid="stat-{{ loop.index }}">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="stat-label">{{ label }}</div>
+            <div class="stat-value mt-1">{{ value }}</div>
+          </div>
+          <div class="stat-icon" style="background:{{bg}};color:{{color}}"><i class="bi {{ icon }}"></i></div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-lg-7">
+      <div class="cg-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h-outfit mb-0">Vendas recentes</h4>
+          <a href="/api/seller/sales" class="small text-decoration-none">Ver todas →</a>
+        </div>
+        {% if recent_sales %}
+        <table class="cg-table">
+          <thead><tr><th>#</th><th>Produto</th><th>Valor</th><th>Status</th><th>Data</th></tr></thead>
+          <tbody>
+          {% for o in recent_sales %}
+            <tr>
+              <td>#{{ o.id }}</td>
+              <td>{{ o.product.name if o.product else '—' }}</td>
+              <td>R$ {{ "%.2f"|format(o.seller_amount) }}</td>
+              <td><span class="badge-pill b-{{ o.status }}">{{ o.status }}</span></td>
+              <td class="text-muted small">{{ o.created_at.strftime('%d/%m %H:%M') }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty"><i class="bi bi-cart"></i><p class="mt-2">Sem vendas ainda</p></div>{% endif %}
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="cg-card">
+        <h4 class="h-outfit mb-3">Sua loja</h4>
+        <p class="small text-muted mb-2">Link público:</p>
+        <code class="d-block mb-3 p-2" style="background:#FAFAF9;border-radius:8px;font-size:12px;word-break:break-all">{{ request.base_url }}api/s/{{ seller.slug }}</code>
+        <a href="/api/s/{{ seller.slug }}" target="_blank" class="btn btn-outline-primary w-100"><i class="bi bi-box-arrow-up-right"></i> Ver loja pública</a>
+        <hr class="my-3">
+        <p class="small text-muted mb-2">Plano atual:</p>
+        <strong>{{ seller.plan.name if seller.plan else '—' }}</strong>
+        <span class="badge-pill b-active ms-2">{{ seller.commission_rate }}% comissão</span>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

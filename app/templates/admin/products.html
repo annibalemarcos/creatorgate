@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Produtos — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-products">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header">
+    <div><h1 class="h-outfit">Produtos</h1><p class="breadcrumb-mini">{{ products|length }} produto(s)</p></div>
+  </div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4"><label class="small-label mb-1">Buscar</label>
+        <input type="text" name="q" value="{{ q }}" class="form-control" data-testid="search-input"></div>
+      <div class="col-md-3"><label class="small-label mb-1">Status</label>
+        <select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['pending','active','rejected','suspended'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="col-md-3"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+        <a href="/api/admin/products" class="btn btn-light">Limpar</a></div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr><th>Produto</th><th>Vendedor</th><th>Preço</th><th>Entrega</th><th>+18</th><th>Status</th><th>Vendas</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for p in products %}
+          <tr data-testid="product-row-{{ p.id }}">
+            <td>
+              <div style="font-weight:600">{{ p.name }}</div>
+              <div class="small text-muted">{{ p.category.name if p.category else 'sem categoria' }}</div>
+            </td>
+            <td>{{ p.seller.store_name if p.seller else '—' }}</td>
+            <td>R$ {{ "%.2f"|format(p.price) }}</td>
+            <td><span class="small">{{ p.delivery_type }}</span></td>
+            <td>{{ 'Sim' if p.is_adult else 'Não' }}</td>
+            <td><span class="badge-pill b-{{ p.status }}">{{ p.status }}</span></td>
+            <td>{{ p.sales_count }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if p.status == 'pending' %}
+                <form method="post" action="/api/admin/products/{{ p.id }}/approve"><button class="btn btn-sm btn-primary" data-testid="approve-{{ p.id }}"><i class="bi bi-check-lg"></i></button></form>
+                <form method="post" action="/api/admin/products/{{ p.id }}/reject"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button></form>
+                {% endif %}
+                {% if p.status == 'active' %}
+                <form method="post" action="/api/admin/products/{{ p.id }}/suspend" data-confirm="Suspender produto?"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pause"></i></button></form>
+                {% endif %}
+                <a href="/api/p/{{ p.id }}" target="_blank" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8"><div class="empty"><i class="bi bi-box"></i><p class="mt-2">Nenhum produto</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

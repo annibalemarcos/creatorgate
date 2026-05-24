@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Pedidos — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-orders">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Pedidos</h1><p class="breadcrumb-mini">{{ orders|length }} pedido(s)</p></div></div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3"><label class="small-label mb-1">Status</label>
+        <select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['pending','paid','delivered','canceled','refunded'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="col-md-3"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button>
+        <a href="/api/admin/orders" class="btn btn-light">Limpar</a></div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr><th>#</th><th>Comprador</th><th>Vendedor</th><th>Produto</th><th>Valor</th><th>Comissão</th><th>Líquido</th><th>Pagamento</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for o in orders %}
+          <tr data-testid="order-row-{{ o.id }}">
+            <td>#{{ o.id }}</td>
+            <td>{{ o.buyer.username or o.buyer.telegram_id if o.buyer else '—' }}</td>
+            <td>{{ o.seller.store_name if o.seller else '—' }}</td>
+            <td>{{ o.product.name if o.product else '—' }}</td>
+            <td>R$ {{ "%.2f"|format(o.amount) }}</td>
+            <td class="small text-muted">R$ {{ "%.2f"|format(o.platform_fee) }}</td>
+            <td>R$ {{ "%.2f"|format(o.seller_amount) }}</td>
+            <td><span class="small">{{ o.payment_method }}</span></td>
+            <td><span class="badge-pill b-{{ o.status }}">{{ o.status }}</span></td>
+            <td class="text-muted small">{{ o.created_at.strftime('%d/%m %H:%M') }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if o.status == 'pending' %}
+                <form method="post" action="/api/admin/orders/{{ o.id }}/mark-paid"><button class="btn btn-sm btn-primary" data-testid="mark-paid-{{ o.id }}"><i class="bi bi-check-circle"></i> Pago</button></form>
+                {% endif %}
+                {% if o.status == 'paid' %}
+                <form method="post" action="/api/admin/orders/{{ o.id }}/deliver"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> Entregar</button></form>
+                {% endif %}
+                {% if o.status not in ['canceled','refunded','delivered'] %}
+                <form method="post" action="/api/admin/orders/{{ o.id }}/cancel" data-confirm="Cancelar pedido?"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i></button></form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="11"><div class="empty"><i class="bi bi-receipt"></i><p class="mt-2">Nenhum pedido</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

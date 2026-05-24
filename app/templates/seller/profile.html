@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Perfil da loja{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main" data-testid="seller-profile">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Perfil da loja</h1></div></div>
+
+  <div class="cg-card">
+    <form method="post" action="/api/seller/profile" data-testid="profile-form">
+      <div class="mb-3">
+        <label class="small-label mb-1">Nome da loja</label>
+        <input name="store_name" value="{{ seller.store_name }}" required class="form-control" data-testid="store-name">
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Slug</label>
+        <input value="{{ seller.slug }}" disabled class="form-control">
+        <small class="text-muted">Link público: <code>/api/s/{{ seller.slug }}</code></small>
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Bio / descrição</label>
+        <textarea name="bio" rows="4" class="form-control" data-testid="bio">{{ seller.bio or '' }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Chave Pix padrão</label>
+        <input name="pix_key" value="{{ seller.pix_key or '' }}" class="form-control" data-testid="pix-key">
+      </div>
+      <button class="btn btn-primary" data-testid="save-profile"><i class="bi bi-check-lg"></i> Salvar</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

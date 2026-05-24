@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.ticket_number }} — {{ ticket.subject }}{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini"><a href="/api/admin/tickets">Tickets</a> ›</div>
+      <h1>{{ ticket.subject }}</h1>
+      <div class="text-muted small mt-1">
+        <code>{{ ticket.ticket_number }}</code> ·
+        {{ CATEGORIES.get(ticket.category, ticket.category) }} ·
+        criado em {{ ticket.created_at.strftime('%d/%m/%Y %H:%M') }}
+      </div>
+    </div>
+    <span class="badge-pill
+      {% if ticket.status=='open' %}b-open
+      {% elif ticket.status=='answered' %}b-delivered
+      {% elif ticket.status=='pending' %}b-pending
+      {% else %}b-canceled{% endif %}" style="font-size:14px;padding:8px 16px">
+      {{ STATUS_LABELS.get(ticket.status, ticket.status) }}
+    </span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="cg-card" data-testid="ticket-thread">
+        {% for m in ticket.messages %}
+        <div class="ticket-msg ticket-msg-{{ m.sender_type }}
+                    {% if m.is_internal_note %}ticket-msg-note{% endif %}">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>
+              {% if m.sender_type=='staff' %}
+                <i class="bi bi-shield-check text-primary"></i> {{ m.sender_name }} (suporte)
+              {% elif m.sender_type=='seller' %}
+                🏪 {{ m.sender_name }}
+              {% elif m.sender_type=='user' %}
+                👤 {{ m.sender_name }}
+              {% else %}
+                <i class="bi bi-robot"></i> Sistema
+              {% endif %}
+              {% if m.is_internal_note %}
+                <span class="badge-pill b-pending ms-2">Nota interna</span>
+              {% endif %}
+            </strong>
+            <span class="text-muted small">{{ m.created_at.strftime('%d/%m %H:%M') }}</span>
+          </div>
+          <div style="white-space:pre-wrap">{{ m.content }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if ticket.status != 'closed' %}
+      <div class="cg-card mt-3">
+        <h6 class="mb-3">Responder</h6>
+        <form method="post" action="/api/admin/tickets/{{ ticket.id }}/reply"
+              data-testid="reply-form">
+          <textarea name="content" rows="4" required class="form-control mb-2"
+                    placeholder="Sua resposta ao usuário..." data-testid="reply-content"></textarea>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="internal" value="1"
+                     id="internal-chk" data-testid="reply-internal">
+              <label for="internal-chk" class="form-check-label small">
+                Nota interna (não visível ao usuário)
+              </label>
+            </div>
+            <button class="btn btn-primary" type="submit" data-testid="reply-submit">
+              <i class="bi bi-send"></i> Enviar resposta
+            </button>
+          </div>
+        </form>
+      </div>
+      {% else %}
+      <div class="cg-card mt-3 text-center text-muted">
+        <i class="bi bi-lock"></i> Ticket fechado em
+        {{ ticket.closed_at.strftime('%d/%m/%Y %H:%M') if ticket.closed_at else '?' }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="cg-card">
+        <h6 class="mb-3">Atribuição e estado</h6>
+        <form method="post" action="/api/admin/tickets/{{ ticket.id }}/assign" class="mb-3">
+          <label class="small-label">Atribuir a</label>
+          <div class="d-flex gap-1">
+            <select name="staff_id" class="form-select" data-testid="assign-select">
+              <option value="0">— não atribuído —</option>
+              {% for s in staffs %}
+              <option value="{{ s.id }}"
+                {% if ticket.assigned_staff_id==s.id %}selected{% endif %}>
+                @{{ s.username }} ({{ s.role }})
+              </option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-light" type="submit" data-testid="assign-btn">
+              <i class="bi bi-check2"></i>
+            </button>
+          </div>
+        </form>
+
+        <form method="post" action="/api/admin/tickets/{{ ticket.id }}/status" class="mb-3">
+          <label class="small-label">Status</label>
+          <div class="d-flex gap-1">
+            <select name="status" class="form-select" data-testid="status-select">
+              {% for k, lbl in STATUS_LABELS.items() %}
+              <option value="{{ k }}" {% if ticket.status==k %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-light" type="submit" data-testid="status-btn">
+              <i class="bi bi-check2"></i>
+            </button>
+          </div>
+        </form>
+
+        <form method="post" action="/api/admin/tickets/{{ ticket.id }}/priority">
+          <label class="small-label">Prioridade</label>
+          <div class="d-flex gap-1">
+            <select name="priority" class="form-select" data-testid="priority-select">
+              {% for k, lbl in PRIORITIES.items() %}
+              <option value="{{ k }}" {% if ticket.priority==k %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-light" type="submit" data-testid="priority-btn">
+              <i class="bi bi-check2"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="cg-card mt-3">
+        <h6 class="mb-2">Aberto por</h6>
+        {% if ticket.opener_seller %}
+          🏪 <strong>{{ ticket.opener_seller.store_name }}</strong><br>
+          <small>@{{ ticket.opener_seller.slug }}</small>
+        {% elif ticket.opener_user %}
+          👤 <strong>{{ ticket.opener_user.first_name or ticket.opener_user.username }}</strong><br>
+          {% if ticket.opener_user.telegram_id %}
+          <small>Telegram: <code>{{ ticket.opener_user.telegram_id }}</code></small>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</main>
+
+<style>
+.ticket-msg { padding: 14px 16px; border-radius: 12px; margin-bottom: 12px;
+  background: #FAFAF9; border-left: 3px solid var(--cg-border); }
+.ticket-msg-staff { background: #FFF7ED; border-left-color: var(--cg-primary); }
+.ticket-msg-note { background: #FFFBEB; border-left-color: #B45309; }
+.ticket-msg-seller { background: #ECFDF5; border-left-color: #047857; }
+.ticket-msg-user { background: #EFF6FF; border-left-color: #1D4ED8; }
+</style>
+{% endblock %}

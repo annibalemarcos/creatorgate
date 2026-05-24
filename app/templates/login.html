@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Entrar — CreatorGate{% endblock %}
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card" data-testid="login-card">
+    <div class="text-center mb-4">
+      <div class="d-inline-flex align-items-center gap-2 mb-3">
+        <div style="width:14px;height:14px;border-radius:50%;background:var(--cg-primary)"></div>
+        <span class="h-outfit" style="font-size:24px;font-weight:700">CreatorGate</span>
+      </div>
+      <h2 class="h-outfit" style="font-size:22px">Acessar painel do vendedor</h2>
+      <p class="text-muted small">Marketplace de conteúdos digitais</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-info small" data-testid="login-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/api/login" data-testid="login-form">
+      <div class="mb-3">
+        <label class="small-label mb-1">Slug da loja</label>
+        <input type="text" name="username" required class="form-control"
+               placeholder="ex: minha-loja" data-testid="login-username" autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Senha</label>
+        <input type="password" name="password" required class="form-control"
+               data-testid="login-password">
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary w-100 py-2" data-testid="login-submit">
+        <i class="bi bi-arrow-right-circle me-1"></i> Entrar
+      </button>
+    </form>
+
+    <div class="text-center mt-4 small">
+      Ainda não vende no CreatorGate?
+      <a href="/api/register" class="text-decoration-none fw-semibold"
+         style="color:var(--cg-primary)" data-testid="register-link">
+        Criar conta de vendedor
+      </a>
+    </div>
+
+    <div class="text-center mt-3 small text-muted">
+      <a href="/api/" class="text-decoration-none">← Voltar à loja</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

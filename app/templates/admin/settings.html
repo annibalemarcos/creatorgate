@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Configurações — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-settings">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Configurações</h1><p class="breadcrumb-mini">Plataforma e pagamentos</p></div></div>
+
+  <div class="cg-card">
+    <form method="post" action="/api/admin/settings/update" data-testid="settings-form">
+      <div class="mb-3">
+        <label class="small-label mb-1">Nome da plataforma</label>
+        <input name="platform_name" value="{{ items.get('platform_name','CreatorGate') }}" class="form-control">
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Chave Pix (recebimento)</label>
+        <input name="pix_key" value="{{ items.get('pix_key','') }}" class="form-control" data-testid="pix-key" placeholder="email@exemplo.com / cpf / chave aleatória">
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Instruções de pagamento Pix</label>
+        <textarea name="pix_instructions" rows="3" class="form-control" data-testid="pix-instructions">{{ items.get('pix_instructions','') }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="small-label mb-1">Suporte (username Telegram)</label>
+        <input name="support_username" value="{{ items.get('support_username','@suporte_creatorgate') }}" class="form-control">
+      </div>
+      <button class="btn btn-primary" data-testid="settings-submit"><i class="bi bi-check-lg"></i> Salvar</button>
+    </form>
+  </div>
+
+  <div class="cg-card mt-3">
+    <h5 class="h-outfit">Variáveis (.env)</h5>
+    <p class="small text-muted">Estas configurações estão no arquivo <code>.env</code>:</p>
+    <ul class="small text-muted">
+      <li><code>BOT_TOKEN</code>: token do bot Telegram</li>
+      <li><code>PLATFORM_COMMISSION_PERCENT</code>: comissão padrão da plataforma</li>
+      <li><code>ALLOW_ADULT_CONTENT</code>: permite área +18 globalmente</li>
+      <li><code>ENABLE_BOT</code>: liga/desliga polling do bot junto ao app</li>
+    </ul>
+  </div>
+</main>
+{% endblock %}

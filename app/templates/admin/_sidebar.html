@@ -1,0 +1,79 @@
+{# Sidebar component for admin layout - menus filtered by staff role #}
+{% set staff_role = user.staff_role if user else '' %}
+{% set is_super = staff_role == 'super_admin' %}
+{% set is_mod = staff_role == 'moderator' %}
+{% set is_fin = staff_role == 'financial' %}
+{% set is_supp = staff_role == 'support' %}
+{% set role_label = {'super_admin':'Super Admin','moderator':'Moderador','financial':'Financeiro','support':'Suporte'}.get(staff_role, 'Staff') %}
+
+<aside class="cg-sidebar" data-testid="admin-sidebar">
+  <a href="/api/admin" class="brand"><span class="dot"></span> CreatorGate</a>
+  <div class="px-2 mb-3 small">
+    <span class="badge-pill b-active" data-testid="role-badge">{{ role_label }}</span>
+    <div class="mt-1 text-muted" style="font-size:12px">@{{ user.username if user else '' }}</div>
+  </div>
+
+  <div class="nav-section">Geral</div>
+  <a class="nav-link {% if active=='dashboard' %}active{% endif %}" href="/api/admin" data-testid="nav-dashboard"><i class="bi bi-grid"></i> Dashboard</a>
+
+  {# Tickets - everyone except pure financial #}
+  {% if is_super or is_mod or is_supp or is_fin %}
+  <a class="nav-link {% if active=='tickets' %}active{% endif %}" href="/api/admin/tickets" data-testid="nav-tickets">
+    <i class="bi bi-life-preserver"></i> Tickets
+    <span id="tickets-badge" class="badge bg-danger ms-auto" style="display:none;font-size:10px"></span>
+  </a>
+  {% endif %}
+
+  <div class="nav-section">Gestão</div>
+
+  {% if is_super or is_mod or is_fin or is_supp %}
+  <a class="nav-link {% if active=='sellers' %}active{% endif %}" href="/api/admin/sellers" data-testid="nav-sellers"><i class="bi bi-shop"></i> Vendedores</a>
+  {% endif %}
+
+  {% if is_super or is_mod or is_supp %}
+  <a class="nav-link {% if active=='products' %}active{% endif %}" href="/api/admin/products" data-testid="nav-products"><i class="bi bi-box-seam"></i> Produtos</a>
+  {% endif %}
+
+  {% if is_super or is_fin or is_supp %}
+  <a class="nav-link {% if active=='orders' %}active{% endif %}" href="/api/admin/orders" data-testid="nav-orders"><i class="bi bi-receipt"></i> Pedidos</a>
+  {% endif %}
+
+  {% if is_super or is_mod or is_supp %}
+  <a class="nav-link {% if active=='users' %}active{% endif %}" href="/api/admin/users" data-testid="nav-users"><i class="bi bi-people"></i> Usuários</a>
+  {% endif %}
+
+  {% if is_super or is_fin %}
+  <a class="nav-link {% if active=='withdrawals' %}active{% endif %}" href="/api/admin/withdrawals" data-testid="nav-withdrawals"><i class="bi bi-cash-coin"></i> Saques</a>
+  {% endif %}
+
+  {% if is_super or is_mod or is_supp %}
+  <a class="nav-link {% if active=='reports' %}active{% endif %}" href="/api/admin/reports" data-testid="nav-reports"><i class="bi bi-flag"></i> Denúncias</a>
+  {% endif %}
+
+  {% if is_super %}
+  <div class="nav-section">Sistema</div>
+  <a class="nav-link {% if active=='staff' %}active{% endif %}" href="/api/admin/staff" data-testid="nav-staff"><i class="bi bi-person-badge"></i> Equipe / Staff</a>
+  <a class="nav-link {% if active=='categories' %}active{% endif %}" href="/api/admin/categories" data-testid="nav-categories"><i class="bi bi-tags"></i> Categorias</a>
+  <a class="nav-link {% if active=='plans' %}active{% endif %}" href="/api/admin/plans" data-testid="nav-plans"><i class="bi bi-stars"></i> Planos</a>
+  <a class="nav-link {% if active=='settings' %}active{% endif %}" href="/api/admin/settings" data-testid="nav-settings"><i class="bi bi-gear"></i> Configurações</a>
+  {% endif %}
+
+  <hr class="my-3">
+  <a class="nav-link" href="/api/logout" data-testid="nav-logout"><i class="bi bi-box-arrow-right"></i> Sair</a>
+</aside>
+
+{# Notifications bell - top-right floating #}
+<div class="cg-notif-bell" data-testid="notif-bell">
+  <button class="btn btn-light position-relative" id="notifBtn" aria-label="Notificações">
+    <i class="bi bi-bell"></i>
+    <span id="notif-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:10px"></span>
+  </button>
+  <div id="notifPanel" class="cg-notif-panel" style="display:none">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <strong>Notificações</strong>
+      <button id="notifMarkAll" class="btn btn-sm btn-link p-0" style="font-size:12px">Marcar todas como lidas</button>
+    </div>
+    <div id="notifList"></div>
+  </div>
+</div>
+<script>window.CG_NOTIF_BASE = '/api/admin';</script>

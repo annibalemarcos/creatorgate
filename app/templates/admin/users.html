@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Usuários — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-users">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Usuários</h1><p class="breadcrumb-mini">{{ users|length }} usuário(s)</p></div></div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4"><input type="text" name="q" value="{{ q }}" class="form-control" placeholder="username..." data-testid="search-input"></div>
+      <div class="col-md-3"><select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['active','banned','blocked'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="col-md-3"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr><th>Telegram</th><th>Username</th><th>Nome</th><th>Papel</th><th>+18</th><th>Termos</th><th>Total gasto</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for u in users %}
+          <tr data-testid="user-row-{{ u.id }}">
+            <td><code class="small">{{ u.telegram_id or '—' }}</code></td>
+            <td>@{{ u.username or '—' }}</td>
+            <td>{{ u.first_name or '' }} {{ u.last_name or '' }}</td>
+            <td><span class="small">{{ u.role }}</span></td>
+            <td>{{ 'Sim' if u.age_confirmed else '—' }}</td>
+            <td>{{ 'Sim' if u.terms_accepted else '—' }}</td>
+            <td>R$ {{ "%.2f"|format(u.total_spent or 0) }}</td>
+            <td><span class="badge-pill b-{{ u.status }}">{{ u.status }}</span></td>
+            <td>
+              {% if u.status == 'active' %}
+              <form method="post" action="/api/admin/users/{{ u.id }}/ban" data-confirm="Banir usuário?"><button class="btn btn-sm btn-outline-danger" data-testid="ban-{{ u.id }}"><i class="bi bi-slash-circle"></i> Banir</button></form>
+              {% else %}
+              <form method="post" action="/api/admin/users/{{ u.id }}/unban"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-counterclockwise"></i> Desbanir</button></form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9"><div class="empty"><i class="bi bi-people"></i><p class="mt-2">Nenhum usuário</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}

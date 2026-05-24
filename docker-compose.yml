@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    container_name: creatorgate
+    ports:
+      - "5812:5812"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    # depends_on:
+    #   - db
+
+  # Descomente para usar PostgreSQL em vez de SQLite
+  # Lembre de:
+  # 1. Adicionar `psycopg2-binary>=2.9.9` no requirements.txt
+  # 2. Mudar DATABASE_URL no .env para:
+  #    DATABASE_URL=postgresql+psycopg2://creatorgate:senha@db:5432/creatorgate
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: creatorgate-db
+  #   environment:
+  #     POSTGRES_USER: creatorgate
+  #     POSTGRES_PASSWORD: senha
+  #     POSTGRES_DB: creatorgate
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   pgdata:

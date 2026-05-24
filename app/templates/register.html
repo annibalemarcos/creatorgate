@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Criar conta de vendedor — CreatorGate{% endblock %}
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card" style="max-width:520px" data-testid="register-card">
+    <div class="text-center mb-4">
+      <div class="d-inline-flex align-items-center gap-2 mb-3">
+        <div style="width:14px;height:14px;border-radius:50%;background:var(--cg-primary)"></div>
+        <span class="h-outfit" style="font-size:24px;font-weight:700">CreatorGate</span>
+      </div>
+      <h2 class="h-outfit" style="font-size:22px">Criar conta de vendedor</h2>
+      <p class="text-muted small">Comece a vender seus conteúdos digitais hoje</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger small" data-testid="register-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/api/register" data-testid="register-form">
+      <div class="mb-3">
+        <label class="small-label mb-1">Nome da loja *</label>
+        <input type="text" name="store_name" required minlength="3" maxlength="120"
+               class="form-control" placeholder="ex: Estúdio da Ana"
+               data-testid="register-store-name">
+        <div class="form-text small">O slug da loja será gerado automaticamente.</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="small-label mb-1">Bio / descrição</label>
+        <textarea name="bio" rows="2" class="form-control" maxlength="500"
+                  placeholder="Conte em poucas palavras o que você vende"
+                  data-testid="register-bio"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="small-label mb-1">Plano</label>
+        <select name="plan_id" class="form-select" data-testid="register-plan">
+          {% for p in plans %}
+          <option value="{{ p.id }}">
+            {{ p.name }} — R$ {{ '%.2f'|format(p.monthly_price) }}/mês ·
+            {{ p.commission_rate }}% comissão ·
+            {% if p.max_products < 0 %}produtos ilimitados{% else %}até {{ p.max_products }} produtos{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="small-label mb-1">Usuário do Telegram (opcional)</label>
+        <input type="text" name="telegram_username" class="form-control"
+               placeholder="@seuusuario" data-testid="register-telegram">
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12 col-sm-6 mb-3">
+          <label class="small-label mb-1">Senha * (mín. 8 caracteres)</label>
+          <input type="password" name="password" required minlength="8"
+                 class="form-control" data-testid="register-password">
+        </div>
+        <div class="col-12 col-sm-6 mb-3">
+          <label class="small-label mb-1">Confirmar senha *</label>
+          <input type="password" name="password_confirm" required minlength="8"
+                 class="form-control" data-testid="register-password-confirm">
+        </div>
+      </div>
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="terms" value="1"
+               id="terms-check" required data-testid="register-terms">
+        <label class="form-check-label small" for="terms-check">
+          Aceito os <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">termos de uso</a>
+          do CreatorGate e declaro que meu conteúdo é original ou licenciado.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 py-2" data-testid="register-submit">
+        <i class="bi bi-person-plus me-1"></i> Criar conta de vendedor
+      </button>
+    </form>
+
+    <div class="text-center mt-4 small">
+      Já tem conta?
+      <a href="/api/login" class="text-decoration-none fw-semibold"
+         style="color:var(--cg-primary)">Entrar</a>
+    </div>
+    <div class="text-center mt-2 small text-muted">
+      <a href="/api/" class="text-decoration-none">← Voltar à loja</a>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de termos -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Termos de uso — CreatorGate</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body small">
+        <p>Ao se cadastrar como vendedor, você concorda com as regras abaixo:</p>
+        <ul>
+          <li>Proibido conteúdo envolvendo menores de idade.</li>
+          <li>Proibido conteúdo sem consentimento das pessoas envolvidas.</li>
+          <li>Proibido conteúdo vazado ou de terceiros sem autorização.</li>
+          <li>Proibido deepfake sexual.</li>
+          <li>Proibido qualquer conteúdo ilegal.</li>
+          <li>Você é o único responsável pelo conteúdo que publica.</li>
+          <li>O CreatorGate retém uma comissão por venda conforme o plano contratado.</li>
+        </ul>
+        <p>A violação destas regras resulta em suspensão imediata, bloqueio de saldo
+           e/ou banimento da plataforma.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

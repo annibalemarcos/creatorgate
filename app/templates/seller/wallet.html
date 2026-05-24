@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Carteira{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main" data-testid="seller-wallet">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Carteira</h1></div></div>
+
+  <div class="row g-3">
+    <div class="col-md-3"><div class="cg-card stat-card">
+      <div class="stat-label">Disponível</div>
+      <div class="stat-value" data-testid="balance-available" style="color:#047857">R$ {{ "%.2f"|format(wallet.available_balance) }}</div>
+    </div></div>
+    <div class="col-md-3"><div class="cg-card stat-card">
+      <div class="stat-label">Pendente</div>
+      <div class="stat-value" style="color:#B45309">R$ {{ "%.2f"|format(wallet.pending_balance) }}</div>
+    </div></div>
+    <div class="col-md-3"><div class="cg-card stat-card">
+      <div class="stat-label">Bloqueado</div>
+      <div class="stat-value" style="color:#B91C1C">R$ {{ "%.2f"|format(wallet.blocked_balance) }}</div>
+    </div></div>
+    <div class="col-md-3"><div class="cg-card stat-card">
+      <div class="stat-label">Total ganho</div>
+      <div class="stat-value">R$ {{ "%.2f"|format(wallet.total_earned) }}</div>
+    </div></div>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <div class="col-lg-5">
+      <div class="cg-card">
+        <h4 class="h-outfit mb-3">Solicitar saque</h4>
+        <form method="post" action="/api/seller/withdrawals/request" data-testid="withdraw-form">
+          <div class="mb-3">
+            <label class="small-label mb-1">Valor (R$)</label>
+            <input name="amount" type="number" step="0.01" min="1" max="{{ wallet.available_balance }}" required class="form-control" data-testid="withdraw-amount">
+            <small class="text-muted">Disponível: R$ {{ "%.2f"|format(wallet.available_balance) }}</small>
+          </div>
+          <div class="mb-3">
+            <label class="small-label mb-1">Chave Pix</label>
+            <input name="pix_key" value="{{ seller.pix_key or '' }}" required class="form-control" data-testid="withdraw-pix">
+          </div>
+          <button class="btn btn-primary w-100" {% if wallet.available_balance < 1 %}disabled{% endif %} data-testid="withdraw-submit">
+            <i class="bi bi-cash-coin"></i> Solicitar saque
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="cg-card p-0">
+        <div class="p-3 pb-0"><h4 class="h-outfit">Histórico de saques</h4></div>
+        <table class="cg-table">
+          <thead><tr><th>#</th><th>Valor</th><th>Pix</th><th>Status</th><th>Pedido em</th><th>Pago em</th></tr></thead>
+          <tbody>
+          {% for w in withdrawals %}
+            <tr data-testid="wd-{{ w.id }}">
+              <td>#{{ w.id }}</td>
+              <td><strong>R$ {{ "%.2f"|format(w.amount) }}</strong></td>
+              <td class="small"><code>{{ w.pix_key }}</code></td>
+              <td><span class="badge-pill b-{{ w.status }}">{{ w.status }}</span></td>
+              <td class="small text-muted">{{ w.requested_at.strftime('%d/%m %H:%M') }}</td>
+              <td class="small text-muted">{{ w.paid_at.strftime('%d/%m %H:%M') if w.paid_at else '—' }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6"><div class="empty"><p>Nenhuma solicitação</p></div></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

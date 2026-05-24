@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Equipe / Staff — CreatorGate{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb-mini">Sistema</div>
+      <h1>Equipe / Staff</h1>
+    </div>
+    <a href="/api/admin/staff/new" class="btn btn-primary" data-testid="new-staff-btn">
+      <i class="bi bi-plus-circle"></i> Novo membro
+    </a>
+  </div>
+
+  <form method="get" class="cg-card mb-3 d-flex gap-2 flex-wrap" data-testid="staff-filter-form">
+    <input type="text" name="q" value="{{ q }}" class="form-control" style="max-width:300px"
+           placeholder="Buscar por nome ou usuário" data-testid="filter-q">
+    <select name="role" class="form-select" style="max-width:220px" data-testid="filter-role">
+      <option value="">Todos os roles</option>
+      {% for key, label in ROLE_LABELS.items() %}
+      <option value="{{ key }}" {% if role==key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-light" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+  </form>
+
+  <div class="cg-card p-0">
+    <table class="cg-table" data-testid="staff-table">
+      <thead>
+        <tr>
+          <th>Usuário</th>
+          <th>Nome</th>
+          <th>Role</th>
+          <th>Telegram</th>
+          <th>Status</th>
+          <th>Último login</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in staffs %}
+        <tr data-testid="staff-row-{{ s.id }}">
+          <td><strong>@{{ s.username }}</strong></td>
+          <td>{{ s.full_name or '—' }}</td>
+          <td>
+            <span class="badge-pill
+              {% if s.role=='super_admin' %}b-banned{% elif s.role=='moderator' %}b-paid
+              {% elif s.role=='financial' %}b-delivered{% else %}b-active{% endif %}">
+              {{ ROLE_LABELS.get(s.role, s.role) }}
+            </span>
+          </td>
+          <td class="small">{{ s.telegram_id or '—' }}</td>
+          <td>
+            {% if s.is_active %}
+              <span class="badge-pill b-active">Ativo</span>
+            {% else %}
+              <span class="badge-pill b-canceled">Inativo</span>
+            {% endif %}
+            {% if s.promoted_from_seller_id %}
+              <span class="badge-pill b-pending ms-1" title="Promovido de vendedor">PV</span>
+            {% endif %}
+          </td>
+          <td class="small text-muted">
+            {{ s.last_login_at.strftime('%d/%m %H:%M') if s.last_login_at else '—' }}
+          </td>
+          <td>
+            <a href="/api/admin/staff/{{ s.id }}/edit" class="btn btn-sm btn-light"
+               data-testid="edit-staff-{{ s.id }}"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="/api/admin/staff/{{ s.id }}/toggle" class="d-inline">
+              <button class="btn btn-sm btn-light" data-testid="toggle-staff-{{ s.id }}">
+                <i class="bi bi-{% if s.is_active %}pause{% else %}play{% endif %}"></i>
+              </button>
+            </form>
+            <form method="post" action="/api/admin/staff/{{ s.id }}/delete" class="d-inline"
+                  onsubmit="return confirm('Excluir este staff?');">
+              <button class="btn btn-sm btn-light text-danger" data-testid="delete-staff-{{ s.id }}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">
+          <i class="bi bi-people"></i><br>Nenhum membro de staff cadastrado.<br>
+          <a href="/api/admin/staff/new" class="btn btn-primary mt-3">Adicionar primeiro membro</a>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 small text-muted">
+    <strong>Roles disponíveis:</strong>
+    <ul class="mt-2">
+      <li><strong>Super Admin</strong> — controle total, gerencia staff, configurações e tudo mais.</li>
+      <li><strong>Moderador</strong> — aprova/reprova produtos, gerencia denúncias, bane usuários, responde tickets.</li>
+      <li><strong>Financeiro</strong> — gerencia saques, pedidos pagos, carteiras. Não modera conteúdo.</li>
+      <li><strong>Suporte</strong> — responde tickets, visualiza pedidos/produtos/usuários. Sem ações destrutivas.</li>
+    </ul>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: creatorgate
+    runtime: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///./data/app.db
+      - key: APP_BASE_URL
+        sync: false
+      - key: ALLOW_ADULT_CONTENT
+        value: "true"
+      - key: PLATFORM_COMMISSION_PERCENT
+        value: "15"
+      - key: ENABLE_BOT
+        value: "false"
+      - key: BOT_TOKEN
+        sync: false
+      - key: PIX_KEY_DEFAULT
+        sync: false
+      - key: PIX_INSTRUCTIONS
+        value: "Envie o valor exato e confirme com o suporte"
+    # Disco persistente (só plano Starter+, para Free use Postgres)
+    # disk:
+    #   name: creatorgate-data
+    #   mountPath: /opt/render/project/src/data
+    #   sizeGB: 1

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Meus produtos{% endblock %}
+{% block body %}
+{% include "seller/_sidebar.html" %}
+<main class="cg-main" data-testid="seller-products">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header">
+    <div><h1 class="h-outfit">Meus produtos</h1><p class="breadcrumb-mini">{{ products|length if products else 0 }} produto(s)</p></div>
+    {% if seller.status == 'active' %}
+    <a href="/api/seller/products/new" class="btn btn-primary" data-testid="new-product-btn"><i class="bi bi-plus-lg"></i> Novo produto</a>
+    {% endif %}
+  </div>
+
+  {% if blocked %}
+  <div class="alert" style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:12px">
+    <i class="bi bi-exclamation-triangle"></i> Sua loja não está ativa. Você não pode criar produtos no momento.
+  </div>
+  {% endif %}
+
+  <div class="cg-card p-0">
+    <table class="cg-table">
+      <thead><tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Entrega</th><th>+18</th><th>Vendas</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody>
+      {% for p in products %}
+        <tr data-testid="product-row-{{ p.id }}">
+          <td><strong>{{ p.name }}</strong></td>
+          <td>{{ p.category.name if p.category else '—' }}</td>
+          <td>R$ {{ "%.2f"|format(p.price) }}</td>
+          <td><span class="small">{{ p.delivery_type }}</span></td>
+          <td>{{ 'Sim' if p.is_adult else 'Não' }}</td>
+          <td>{{ p.sales_count }}</td>
+          <td><span class="badge-pill b-{{ p.status }}">{{ p.status }}</span></td>
+          <td>
+            <a href="/api/seller/products/{{ p.id }}/edit" class="btn btn-sm btn-light" data-testid="edit-{{ p.id }}"><i class="bi bi-pencil"></i></a>
+            {% if p.status == 'active' %}
+            <a href="/api/p/{{ p.id }}" target="_blank" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8"><div class="empty"><i class="bi bi-box-seam"></i><p class="mt-2">Nenhum produto cadastrado</p>
+        {% if seller.status == 'active' %}<a href="/api/seller/products/new" class="btn btn-primary mt-2"><i class="bi bi-plus-lg"></i> Criar primeiro produto</a>{% endif %}
+        </div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

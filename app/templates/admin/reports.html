@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Denúncias — Admin{% endblock %}
+{% block body %}
+{% include "admin/_sidebar.html" %}
+<main class="cg-main" data-testid="admin-reports">
+  <button class="cg-mobile-toggle" data-testid="sidebar-toggle"><i class="bi bi-list"></i> Menu</button>
+  <div class="page-header"><div><h1 class="h-outfit">Denúncias</h1><p class="breadcrumb-mini">{{ items|length }} denúncia(s)</p></div></div>
+
+  <div class="cg-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3"><select name="status" class="form-select" data-testid="filter-status">
+          <option value="">Todos</option>
+          {% for st in ['open','reviewing','resolved','rejected'] %}
+          <option value="{{ st }}" {% if status==st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="col-md-3"><button class="btn btn-primary"><i class="bi bi-funnel"></i></button>
+        <a href="/api/admin/reports" class="btn btn-light">Limpar</a></div>
+    </form>
+  </div>
+
+  <div class="cg-card p-0">
+    <div class="table-responsive">
+      <table class="cg-table">
+        <thead><tr><th>#</th><th>Motivo</th><th>Severidade</th><th>Produto</th><th>Vendedor</th><th>Detalhes</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for r in items %}
+          <tr data-testid="report-row-{{ r.id }}">
+            <td>#{{ r.id }}</td>
+            <td><strong>{{ REASONS.get(r.reason, r.reason) }}</strong></td>
+            <td><span class="badge-pill {% if r.severity=='critical' %}b-banned{% elif r.severity=='high' %}b-suspended{% else %}b-pending{% endif %}">{{ r.severity }}</span></td>
+            <td>{{ r.product.name if r.product else '—' }}</td>
+            <td>{{ r.seller.store_name if r.seller else '—' }}</td>
+            <td class="small text-muted" style="max-width:200px">{{ (r.details or '')[:80] }}</td>
+            <td><span class="badge-pill b-{{ r.status }}">{{ r.status }}</span></td>
+            <td class="small text-muted">{{ r.created_at.strftime('%d/%m %H:%M') }}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if r.status in ['open','reviewing'] %}
+                <form method="post" action="/api/admin/reports/{{ r.id }}/resolve"><button class="btn btn-sm btn-primary" data-testid="resolve-{{ r.id }}"><i class="bi bi-check"></i></button></form>
+                <form method="post" action="/api/admin/reports/{{ r.id }}/reject"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i></button></form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9"><div class="empty"><i class="bi bi-flag"></i><p class="mt-2">Sem denúncias</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}
